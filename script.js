@@ -3,44 +3,29 @@ var currentShow = 0;
 var currentImage = 0;
 var shows = [];
 
-function loadSchedule() {
+async function loadSchedule() {
   // Read the file and extract the show names
-  var fileInput = document.createElement("input");
-  fileInput.type = "file";
-  fileInput.accept = "text/plain";
-  fileInput.onchange = function() {
-    var file = fileInput.files[0];
-    var reader = new FileReader();
-    reader.onload = function() {
-      var showNames = reader.result.split("\n");
-      // Load the images for each show and add to the shows array
-      for (var i = 0; i < showNames.length; i++) {
-        var showName = showNames[i];
-        var showFolder = "Content/Shows/" + showName;
-        var fileInput2 = document.createElement("input");
-        fileInput2.type = "file";
-        fileInput2.accept = "text/plain";
-        fileInput2.onchange = function() {
-          var file2 = fileInput2.files[0];
-          var reader2 = new FileReader();
-          reader2.onload = function() {
-            var showImages = reader2.result.split("\n");
-            shows.push({ name: showName, images: showImages });
-          };
-          reader2.readAsText(file2);
-        };
-        fileInput2.click();
-      }
-    };
-    reader.readAsText(file);
-  };
-  fileInput.click();
+  const response = await fetch("Content/DockTVSchedule.txt");
+  const showNames = await response.text().split("\n");
+  
+  // Load the images for each show and add to the shows array
+  for (const showName of showNames) {
+    const showFolder = "Content/Shows/" + showName;
+    const showResponse = await fetch(showFolder + "/list_of_images.txt");
+    const showImages = await showResponse.text().split("\n");
+    shows.push({ name: showName, images: showImages });
+  }
 }
 
-function displayImage() {
+async function displayImage() {
+  // Check if the shows array is empty
+  if (shows.length === 0) {
+    return;
+  }
+  
   // Get the current show and image
-  var show = shows[currentShow];
-  var image = show.images[currentImage];
+  const show = shows[currentShow];
+  const image = show.images[currentImage];
   
   // Update the background image
   document.body.style.backgroundImage = "url('Content/Shows/" + show.name + "/" + image + "')";
